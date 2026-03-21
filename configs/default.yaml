@@ -1,0 +1,42 @@
+# configs/default.yaml
+
+# ============ 数据 ============
+data:
+  train_json: "data/coco/annotations/captions_train2017.json"
+  train_img:  "data/coco/train2017"
+  val_json:   "data/coco/annotations/captions_val2017.json"
+  val_img:    "data/coco/val2017"
+  image_size: 224
+  num_workers: 8
+
+# ============ 模型 ============
+model:
+  image_encoder_name: "vit_base_patch16_224"
+  pretrained: true
+  embed_dim: 256
+  vocab_size: 49408
+  text_max_length: 77
+  text_hidden_dim: 512
+  text_num_layers: 4
+  text_num_heads: 8
+
+  # >>>>>> 新增：冻结策略 <<<<<<
+  freeze_text_encoder: true       # 冻结 text_encoder（不含 text_projection）
+  freeze_text_projection: false   # text_projection 属于 CLIP 投影层，默认可训练
+
+# ============ 训练 ============
+training:
+  epochs: 30
+  batch_size: 128
+  lr: 3.0e-4                     # CLIP 投影层 + logit_scale 的学习率
+  image_encoder_lr: 1.0e-5       # >>>>>> 新增：image_encoder fine-tune 用更小的学习率
+  weight_decay: 0.01
+  warmup_steps: 1000
+  max_grad_norm: 1.0
+  device: "cuda"
+
+# ============ 日志 & 保存 ============
+logging:
+  log_interval: 100
+  save_dir: "checkpoints"
+  resume: ""

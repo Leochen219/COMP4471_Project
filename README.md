@@ -41,3 +41,8 @@ MicrosoftCOCO, ImageNet, etc.
 Our methodology focuses on a dual-encoder architecture. We will use a Vision Transformer (ViT) as the image encoder and a pre-trained text-encoder. Critically, we will freeze the text encoder to preserve its linguistic knowledge while actively training the ViT image encoder and a learnable linear projection layer that maps both modalities into a shared d-dimensional latent space. 
 ## Evaluation:
 We will evaluate the results both qualitatively and quantitatively. Qualitatively, we will visualize "similarity heatmaps" and retrieve the Top-k most likely classes for sample images to inspect if the model captures correct semantic attributes. Quantitatively, we will report Zero-shot Top-1 and Top-k Accuracy on the ImageNet validation set. We will also perform an ablation study comparing our trained ViT's performance against a standard supervised image classification model in similar scale to demonstrate the advantages of the open-vocabulary approach.
+
+## environment: 
+
+```bash
+pip install -r requirements.txt
