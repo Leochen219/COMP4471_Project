@@ -1,0 +1,150 @@
+{
+  "images": [
+    {
+      "id": 0,
+      "file_name": "000000.jpg"
+    },
+    {
+      "id": 1,
+      "file_name": "000001.jpg"
+    },
+    {
+      "id": 2,
+      "file_name": "000002.jpg"
+    },
+    {
+      "id": 3,
+      "file_name": "000003.jpg"
+    },
+    {
+      "id": 4,
+      "file_name": "000004.jpg"
+    },
+    {
+      "id": 5,
+      "file_name": "000005.jpg"
+    },
+    {
+      "id": 6,
+      "file_name": "000006.jpg"
+    },
+    {
+      "id": 7,
+      "file_name": "000007.jpg"
+    },
+    {
+      "id": 8,
+      "file_name": "000008.jpg"
+    },
+    {
+      "id": 9,
+      "file_name": "000009.jpg"
+    },
+    {
+      "id": 10,
+      "file_name": "000010.jpg"
+    },
+    {
+      "id": 11,
+      "file_name": "000011.jpg"
+    },
+    {
+      "id": 12,
+      "file_name": "000012.jpg"
+    },
+    {
+      "id": 13,
+      "file_name": "000013.jpg"
+    },
+    {
+      "id": 14,
+      "file_name": "000014.jpg"
+    },
+    {
+      "id": 15,
+      "file_name": "000015.jpg"
+    }
+  ],
+  "annotations": [
+    {
+      "image_id": 0,
+      "id": 0,
+      "caption": "a photo of a cat sitting on a couch"
+    },
+    {
+      "image_id": 1,
+      "id": 1,
+      "caption": "a dog playing fetch in the park"
+    },
+    {
+      "image_id": 2,
+      "id": 2,
+      "caption": "a beautiful sunset over the ocean"
+    },
+    {
+      "image_id": 3,
+      "id": 3,
+      "caption": "a person riding a bicycle on a road"
+    },
+    {
+      "image_id": 4,
+      "id": 4,
+      "caption": "a red sports car parked on the street"
+    },
+    {
+      "image_id": 5,
+      "id": 5,
+      "caption": "a cup of coffee on a wooden table"
+    },
+    {
+      "image_id": 6,
+      "id": 6,
+      "caption": "a snow covered mountain landscape"
+    },
+    {
+      "image_id": 7,
+      "id": 7,
+      "caption": "children playing in a playground"
+    },
+    {
+      "image_id": 8,
+      "id": 8,
+      "caption": "a bird flying across the blue sky"
+    },
+    {
+      "image_id": 9,
+      "id": 9,
+      "caption": "a plate of delicious spaghetti pasta"
+    },
+    {
+      "image_id": 10,
+      "id": 10,
+      "caption": "a photo of a cat sitting on a couch"
+    },
+    {
+      "image_id": 11,
+      "id": 11,
+      "caption": "a dog playing fetch in the park"
+    },
+    {
+      "image_id": 12,
+      "id": 12,
+      "caption": "a beautiful sunset over the ocean"
+    },
+    {
+      "image_id": 13,
+      "id": 13,
+      "caption": "a person riding a bicycle on a road"
+    },
+    {
+      "image_id": 14,
+      "id": 14,
+      "caption": "a red sports car parked on the street"
+    },
+    {
+      "image_id": 15,
+      "id": 15,
+      "caption": "a cup of coffee on a wooden table"
+    }
+  ]
+}

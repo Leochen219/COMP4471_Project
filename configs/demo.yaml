@@ -1,0 +1,40 @@
+# configs/demo.yaml
+
+# ============ 数据 ============
+data:
+  train_json: "data/demo/annotations/captions_train.json"
+  train_img:  "data/demo/images"
+  val_json:   "data/demo/annotations/captions_val.json"
+  val_img:    "data/demo/images"
+  image_size: 224
+  num_workers: 0
+
+# ============ 模型 ============
+model:
+  image_encoder_name: "vit_base_patch16_224"
+  pretrained: true
+  embed_dim: 256
+  vocab_size: 49408
+  text_max_length: 77
+  text_hidden_dim: 512
+  text_num_layers: 4
+  text_num_heads: 8
+  freeze_text_encoder: true
+  freeze_text_projection: false
+
+# ============ 训练 ============
+training:
+  epochs: 3
+  batch_size: 8
+  lr: 3.0e-4
+  image_encoder_lr: 1.0e-5
+  weight_decay: 0.01
+  warmup_steps: 10
+  max_grad_norm: 1.0
+  device: "cpu"
+
+# ============ 日志 ============
+logging:
+  log_interval: 2
+  save_dir: "checkpoints/demo"
+  resume: ""

@@ -46,3 +46,13 @@ We will evaluate the results both qualitatively and quantitatively. Qualitativel
 
 ```bash
 pip install -r requirements.txt
+
+## How to use: 
+
+demo: 
+
+1. run: python make_demo_data.py (this will generate demo data)
+2. run: python train.py --config configs/demo.yaml (trained model will be stored at checkpoints\demo)
+3. run: python evaluate.py --config configs/demo.yaml --checkpoint checkpoints/demo/best.pt (for evaluation)
+
+COCO: need to be downloaded first to data/coco, where the annotations should be in data/coco/annotations; images should be in data/coco/train2017 and data/coco/val2017

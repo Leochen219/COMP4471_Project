@@ -74,7 +74,7 @@ def train_one_epoch(model, loader, optimizer, scheduler, device, epoch, cfg):
                 f"Loss: {loss.item():.4f}  LR: [{lr_info}]  Temp: {temp:.2f}"
             )
 
-    return total_loss / len(loader)
+    return total_loss / max(len(loader), 1)
 
 
 # ======================== 验证 ==================================
@@ -91,7 +91,7 @@ def validate(model, loader, device):
         loss = model(images, input_ids, attention_mask)
         total_loss += loss.item()
 
-    return total_loss / len(loader)
+    return total_loss / max(len(loader), 1)
 
 
 # ======================== 主函数 ================================
