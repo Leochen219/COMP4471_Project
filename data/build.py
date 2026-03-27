@@ -10,7 +10,9 @@ from .transforms import get_train_transform, get_val_transform
 def build_dataloaders(cfg):
     """训练 + 验证 DataLoader（验证集随机选 caption，用于算 loss）"""
 
-    tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-base-patch32")
+    tokenizer = CLIPTokenizer.from_pretrained(
+        getattr(cfg, "text_encoder_name", "openai/clip-vit-base-patch32")
+    )
 
     train_dataset = CleanCOCODataset(
         json_path=cfg.train_json,
@@ -58,7 +60,9 @@ def build_dataloaders(cfg):
 def build_eval_dataloader(cfg):
     """评估专用 DataLoader（eval_mode=True → 始终取第一条 caption）"""
 
-    tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-base-patch32")
+    tokenizer = CLIPTokenizer.from_pretrained(
+        getattr(cfg, "text_encoder_name", "openai/clip-vit-base-patch32")
+    )
 
     eval_dataset = CleanCOCODataset(
         json_path=cfg.val_json,

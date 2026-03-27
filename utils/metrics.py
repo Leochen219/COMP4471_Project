@@ -35,6 +35,12 @@ def compute_retrieval_metrics(
     for k in ks:
         metrics[f"t2i_R@{k}"] = 100.0 * (t2i_ranks <= k).float().mean().item()
 
+    # In the current evaluation protocol each query has exactly one matched target,
+    # so Recall@1 is equivalent to top-1 retrieval accuracy.
+    metrics["i2t_acc@1"] = metrics["i2t_R@1"]
+    metrics["t2i_acc@1"] = metrics["t2i_R@1"]
+    metrics["mean_acc@1"] = (metrics["i2t_acc@1"] + metrics["t2i_acc@1"]) / 2
+
     # ---- Mean Recall ----
     recall_values = [v for key, v in metrics.items() if "R@" in key]
     metrics["mean_recall"] = sum(recall_values) / len(recall_values)

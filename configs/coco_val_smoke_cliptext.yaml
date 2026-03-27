@@ -1,0 +1,33 @@
+# configs/coco_val_smoke_cliptext.yaml
+
+data:
+  train_json: "data/coco/annotations/captions_val2017.json"
+  train_img:  "data/coco/val2017"
+  val_json:   "data/coco/annotations/captions_val2017.json"
+  val_img:    "data/coco/val2017"
+  image_size: 224
+  num_workers: 4
+
+model:
+  image_encoder_name: "vit_base_patch16_224"
+  pretrained: true
+  text_encoder_name: "openai/clip-vit-base-patch32"
+  embed_dim: 256
+  text_max_length: 77
+  freeze_text_encoder: true
+  freeze_text_projection: false
+
+training:
+  epochs: 1
+  batch_size: 16
+  lr: 3.0e-4
+  image_encoder_lr: 1.0e-5
+  weight_decay: 0.01
+  warmup_steps: 100
+  max_grad_norm: 1.0
+  device: "cuda"
+
+logging:
+  log_interval: 10
+  save_dir: "checkpoints/coco_val_smoke_cliptext"
+  resume: ""

@@ -27,10 +27,7 @@ class CLIPModel(nn.Module):
         image_encoder_name: str = "vit_base_patch16_224",
         pretrained: bool = True,
         embed_dim: int = 256,
-        vocab_size: int = 49408,
-        text_hidden_dim: int = 512,
-        text_num_layers: int = 4,
-        text_num_heads: int = 8,
+        text_encoder_name: str = "openai/clip-vit-base-patch32",
         text_max_length: int = 77,
         freeze_text_encoder: bool = True,
         freeze_text_projection: bool = False,
@@ -39,6 +36,7 @@ class CLIPModel(nn.Module):
 
         self.freeze_text_encoder = freeze_text_encoder
         self.freeze_text_projection = freeze_text_projection
+        self.text_max_length = text_max_length
 
         # ---- 图像分支（fine-tune）----
         self.image_encoder, img_feat_dim = build_image_encoder(
@@ -52,14 +50,11 @@ class CLIPModel(nn.Module):
 
         # ---- 文本分支 ----
         self.text_encoder = TextEncoder(
-            vocab_size=vocab_size,
-            hidden_dim=text_hidden_dim,
-            num_layers=text_num_layers,
-            num_heads=text_num_heads,
-            max_length=text_max_length,
+            model_name=text_encoder_name,
         )
+        text_feat_dim = self.text_encoder.output_dim
         self.text_projection = nn.Sequential(
-            nn.Linear(text_hidden_dim, embed_dim),
+            nn.Linear(text_feat_dim, embed_dim),
             nn.GELU(),
             nn.Linear(embed_dim, embed_dim),
         )
@@ -89,6 +84,9 @@ class CLIPModel(nn.Module):
             for param in self.text_projection.parameters():
                 param.requires_grad = False
             logger.info("[PRTS] text_projection 已冻结")
+
+        if self.freeze_text_encoder:
+            self.text_encoder.eval()
 
         # 统计总体情况
         total = sum(p.numel() for p in self.parameters())
@@ -172,6 +170,12 @@ class CLIPModel(nn.Module):
             )
 
         return param_groups
+
+    def train(self, mode: bool = True):
+        super().train(mode)
+        if self.freeze_text_encoder:
+            self.text_encoder.eval()
+        return self
 
     # =============================================================
     #  前向

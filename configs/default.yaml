@@ -13,6 +13,7 @@ data:
 model:
   image_encoder_name: "vit_base_patch16_224"
   pretrained: true
+  text_encoder_name: "openai/clip-vit-base-patch32"
   embed_dim: 256
   vocab_size: 49408
   text_max_length: 77
@@ -38,5 +39,5 @@ training:
 # ============ 日志 & 保存 ============
 logging:
   log_interval: 100
-  save_dir: "checkpoints"
+  save_dir: "checkpoints/default_cliptext"
   resume: ""

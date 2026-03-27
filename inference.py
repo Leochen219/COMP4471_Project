@@ -24,15 +24,19 @@ def load_model(cfg, checkpoint_path, device):
         image_encoder_name=cfg.image_encoder_name,
         pretrained=False,
         embed_dim=cfg.embed_dim,
-        vocab_size=cfg.vocab_size,
-        text_hidden_dim=cfg.text_hidden_dim,
-        text_num_layers=cfg.text_num_layers,
-        text_num_heads=cfg.text_num_heads,
+        text_encoder_name=getattr(
+            cfg, "text_encoder_name", "openai/clip-vit-base-patch32"
+        ),
         text_max_length=cfg.text_max_length,
     ).to(device)
 
     ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
-    model.load_state_dict(ckpt["model"])
+    try:
+        model.load_state_dict(ckpt["model"])
+    except RuntimeError as exc:
+        raise RuntimeError(
+            "checkpoint 与当前 CLIP 文本编码器模型不兼容。"
+        ) from exc
     model.eval()
     logger.info(f"模型加载完毕: {checkpoint_path}")
     return model
@@ -78,7 +82,9 @@ def main():
     image_embed = encode_image(model, args.image, transform, device)  # [1, D]
 
     # ---------- 编码文本 ----------
-    tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-base-patch32")
+    tokenizer = CLIPTokenizer.from_pretrained(
+        getattr(cfg, "text_encoder_name", "openai/clip-vit-base-patch32")
+    )
     text_embeds = encode_texts(
         model, args.texts, tokenizer, cfg.text_max_length, device
     )  # [N, D]

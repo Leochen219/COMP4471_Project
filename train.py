@@ -4,6 +4,7 @@ import os
 import math
 import logging
 import argparse
+from typing import Any
 
 import torch
 from torch.optim import AdamW
@@ -20,6 +21,28 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 logger = logging.getLogger(__name__)
+
+
+def unwrap_model(model: torch.nn.Module) -> torch.nn.Module:
+    if isinstance(model, torch.nn.DataParallel):
+        return model.module
+    return model
+
+
+def reduce_loss(loss: torch.Tensor) -> torch.Tensor:
+    if loss.ndim > 0:
+        return loss.mean()
+    return loss
+
+
+def parse_gpu_ids(raw_gpu_ids: Any) -> list[int]:
+    if raw_gpu_ids is None:
+        return []
+    if isinstance(raw_gpu_ids, int):
+        return [raw_gpu_ids]
+    if isinstance(raw_gpu_ids, (list, tuple)):
+        return [int(gpu_id) for gpu_id in raw_gpu_ids]
+    return []
 
 
 # ======================== 学习率调度 ============================
@@ -47,12 +70,12 @@ def train_one_epoch(model, loader, optimizer, scheduler, device, epoch, cfg):
         input_ids = batch["input_ids"].to(device, non_blocking=True)
         attention_mask = batch["attention_mask"].to(device, non_blocking=True)
 
-        loss = model(images, input_ids, attention_mask)
+        loss = reduce_loss(model(images, input_ids, attention_mask))
 
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(
-            [p for p in model.parameters() if p.requires_grad],
+            [p for p in unwrap_model(model).parameters() if p.requires_grad],
             max_norm=cfg.max_grad_norm,
         )
         optimizer.step()
@@ -68,7 +91,7 @@ def train_one_epoch(model, loader, optimizer, scheduler, device, epoch, cfg):
                 else f"{g.get('name', i)}={scheduler.get_last_lr()[min(i, len(scheduler.get_last_lr())-1)]:.2e}"
                 for i, g in enumerate(optimizer.param_groups)
             )
-            temp = model.logit_scale.exp().item()
+            temp = unwrap_model(model).logit_scale.exp().item()
             logger.info(
                 f"Epoch [{epoch}] Step [{step}/{len(loader)}]  "
                 f"Loss: {loss.item():.4f}  LR: [{lr_info}]  Temp: {temp:.2f}"
@@ -88,7 +111,7 @@ def validate(model, loader, device):
         input_ids = batch["input_ids"].to(device, non_blocking=True)
         attention_mask = batch["attention_mask"].to(device, non_blocking=True)
 
-        loss = model(images, input_ids, attention_mask)
+        loss = reduce_loss(model(images, input_ids, attention_mask))
         total_loss += loss.item()
 
     return total_loss / max(len(loader), 1)
@@ -103,8 +126,30 @@ def main():
     cfg = load_config(args.config)
 
     # ---------- 设备 ----------
-    device = torch.device(cfg.device if torch.cuda.is_available() else "cpu")
+    gpu_ids = parse_gpu_ids(getattr(cfg, "gpu_ids", None))
+    if torch.cuda.is_available() and str(cfg.device).startswith("cuda"):
+        available_gpus = torch.cuda.device_count()
+        if gpu_ids:
+            invalid_gpu_ids = [
+                gpu_id for gpu_id in gpu_ids
+                if gpu_id < 0 or gpu_id >= available_gpus
+            ]
+            if invalid_gpu_ids:
+                raise ValueError(f"无效的 gpu_ids: {invalid_gpu_ids}")
+            device = torch.device(f"cuda:{gpu_ids[0]}")
+        else:
+            device = torch.device(cfg.device)
+            if device.index is None:
+                gpu_ids = [0]
+            else:
+                gpu_ids = [device.index]
+    else:
+        device = torch.device("cpu")
+        gpu_ids = []
+
     logger.info(f"设备: {device}")
+    if gpu_ids:
+        logger.info(f"使用 GPU IDs: {gpu_ids}")
 
     # ---------- 数据 ----------
     train_loader, val_loader = build_dataloaders(cfg)
@@ -122,10 +167,9 @@ def main():
         image_encoder_name=cfg.image_encoder_name,
         pretrained=cfg.pretrained,
         embed_dim=cfg.embed_dim,
-        vocab_size=cfg.vocab_size,
-        text_hidden_dim=cfg.text_hidden_dim,
-        text_num_layers=cfg.text_num_layers,
-        text_num_heads=cfg.text_num_heads,
+        text_encoder_name=getattr(
+            cfg, "text_encoder_name", "openai/clip-vit-base-patch32"
+        ),
         text_max_length=cfg.text_max_length,
         freeze_text_encoder=freeze_text_encoder,
         freeze_text_projection=freeze_text_projection,
@@ -151,11 +195,31 @@ def main():
     start_epoch = 0
     if cfg.resume and os.path.exists(cfg.resume):
         ckpt = torch.load(cfg.resume, map_location=device, weights_only=False)
-        model.load_state_dict(ckpt["model"])
+        try:
+            model.load_state_dict(ckpt["model"])
+        except RuntimeError as exc:
+            raise RuntimeError(
+                "checkpoint 与当前模型结构不兼容。"
+                "如果你刚切换到 CLIP 文本编码器，请从头训练，或清空 resume。"
+            ) from exc
         optimizer.load_state_dict(ckpt["optimizer"])
         scheduler.load_state_dict(ckpt["scheduler"])
         start_epoch = ckpt["epoch"] + 1
         logger.info(f"从 epoch {start_epoch} 恢复训练")
+
+    if device.type == "cuda" and len(gpu_ids) > 1:
+        if cfg.batch_size < len(gpu_ids):
+            raise ValueError("batch_size 必须不小于 GPU 数量")
+        per_gpu_batch = math.ceil(cfg.batch_size / len(gpu_ids))
+        model = torch.nn.DataParallel(
+            model,
+            device_ids=gpu_ids,
+            output_device=gpu_ids[0],
+        )
+        logger.info(
+            f"[PRTS] 启用 DataParallel | GPUs={gpu_ids} | "
+            f"global_batch={cfg.batch_size} | approx_per_gpu_batch={per_gpu_batch}"
+        )
 
     # ---------- 打印训练策略 ----------
     logger.info("=" * 60)
@@ -188,7 +252,7 @@ def main():
         # 保存 checkpoint（保存完整模型，含冻结参数以便后续切换策略）
         ckpt = {
             "epoch": epoch,
-            "model": model.state_dict(),
+            "model": unwrap_model(model).state_dict(),
             "optimizer": optimizer.state_dict(),
             "scheduler": scheduler.state_dict(),
             "val_loss": val_loss,

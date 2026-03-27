@@ -29,6 +29,7 @@ class CleanCOCODataset(Dataset):
         img_dir: str,
         transform=None,
         tokenizer=None,
+        tokenizer_name: str = "openai/clip-vit-base-patch32",
         max_length: int = 77,
         eval_mode: bool = False,
     ):
@@ -39,7 +40,7 @@ class CleanCOCODataset(Dataset):
 
         # tokenizer: 支持外部传入（多 worker 共享）
         self.tokenizer = tokenizer or CLIPTokenizer.from_pretrained(
-            "openai/clip-vit-base-patch32"
+            tokenizer_name
         )
 
         # ---------- 读取 JSON ----------

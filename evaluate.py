@@ -61,15 +61,19 @@ def main():
         image_encoder_name=cfg.image_encoder_name,
         pretrained=False,       # 加载权重，不需要 pretrained backbone
         embed_dim=cfg.embed_dim,
-        vocab_size=cfg.vocab_size,
-        text_hidden_dim=cfg.text_hidden_dim,
-        text_num_layers=cfg.text_num_layers,
-        text_num_heads=cfg.text_num_heads,
+        text_encoder_name=getattr(
+            cfg, "text_encoder_name", "openai/clip-vit-base-patch32"
+        ),
         text_max_length=cfg.text_max_length,
     ).to(device)
 
     ckpt = torch.load(args.checkpoint, map_location=device, weights_only=False)
-    model.load_state_dict(ckpt["model"])
+    try:
+        model.load_state_dict(ckpt["model"])
+    except RuntimeError as exc:
+        raise RuntimeError(
+            "checkpoint 与当前 CLIP 文本编码器模型不兼容。"
+        ) from exc
     logger.info(f"已加载权重: {args.checkpoint} (epoch {ckpt.get('epoch', '?')})")
 
     # ---------- 提取嵌入 ----------

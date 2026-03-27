@@ -2,13 +2,35 @@
 
 > 项目目标：训练 ViT 图像编码器，通过对比学习与冻结的文本编码器对齐，实现 Zero-Shot 图像分类。
 
+## 最新进展（2026-03-27）
+
+- [x] 已切换到冻结的预训练 CLIP text encoder
+- [x] 已完成 COCO `train2017` / `val2017` 正式训练
+- [x] 已完成 3-GPU 正式训练与 best checkpoint 选取
+- [x] 已完成 COCO 严格检索评估
+- [x] 已完成 `CIFAR-100` zero-shot 迁移测试
+- [x] 已整理实验报告到 `reports/cliptext_experiment_report.md`
+
+### 当前最佳结果
+
+- `best_val_loss = 0.4421` at epoch `26`
+- COCO retrieval:
+  - `i2t_R@1 = 24.88`
+  - `i2t_R@5 = 54.22`
+  - `t2i_R@1 = 24.58`
+  - `t2i_R@5 = 54.28`
+  - `mean_recall = 49.02`
+- CIFAR-100 zero-shot transfer:
+  - `Top-1 = 37.21%`
+  - `Top-5 = 67.03%`
+
 ---
 
 ## Phase 1: 环境与数据准备 ✅ / 🔲
 
 - [x] COCO 数据集下载脚本 (`Dataset/download_COCO.py`)
 - [x] COCO Dataset & DataLoader (`Dataset/DataLoader.py`)
-- [ ] 创建 `requirements.txt`（torch, torchvision, transformers, timm, tqdm 等）
+- [x] 创建 `requirements.txt`（torch, torchvision, transformers, timm, tqdm 等）
 
 ### 1.1 训练数据
 
@@ -18,7 +40,7 @@
 | **CC3M (Conceptual Captions)** | ~300 万图文对 | **强烈推荐** | 补充训练集，性价比最高 |
 | **Flickr30k** | 31K 图 / 155K 图文对 | 可选 | 可作为额外验证集 |
 
-- [ ] 下载 COCO train2017 图片和标注到本地
+- [x] 下载 COCO train2017 / val2017 图片和标注到本地
 - [ ] 下载 CC3M 数据集（需自行根据 TSV 中 URL 下载图片，部分 URL 已失效，实际约 250 万对）
 - [ ] 编写 CC3M DataLoader
 - [ ] 实现 COCO + CC3M 混合训练的 ConcatDataset
@@ -36,49 +58,52 @@
 - [ ] 编写 ImageNet 数据加载器
 - [ ] 准备 CIFAR-10（torchvision 可直接下载）
 - [ ] 编写 CIFAR-10 zero-shot 评估脚本（用于训练过程中快速检查）
+- [x] 准备 CIFAR-100（torchvision 可直接下载）
+- [x] 编写 CIFAR-100 zero-shot 迁移评估脚本
+- [x] 运行 CIFAR-100 zero-shot 迁移评估
 
 ---
 
 ## Phase 2: 模型搭建 🔲
 
 ### 2.1 图像编码器
-- [ ] 实现 ViT 图像编码器（可基于 `timm` 库加载 ViT-B/16 或 ViT-B/32）
-- [ ] 提取 `[CLS]` token 输出作为图像全局特征
+- [x] 实现 ViT 图像编码器（可基于 `timm` 库加载 ViT-B/16 或 ViT-B/32）
+- [x] 提取 `[CLS]` token 输出作为图像全局特征
 
 ### 2.2 文本编码器（冻结）
-- [ ] 加载预训练文本编码器（如 CLIP text encoder 或 DistilBERT）
-- [ ] 冻结全部参数（`requires_grad = False`）
-- [ ] 提取 `[EOS]` / `[CLS]` token 输出作为文本全局特征
+- [x] 加载预训练文本编码器（如 CLIP text encoder 或 DistilBERT）
+- [x] 冻结全部参数（`requires_grad = False`）
+- [x] 提取 `[EOS]` / `[CLS]` token 输出作为文本全局特征
 
 ### 2.3 投影层
-- [ ] 实现 Image Projection Head（Linear / MLP，将图像特征映射到 d 维共享空间）
-- [ ] 实现 Text Projection Head（Linear / MLP，将文本特征映射到 d 维共享空间）
-- [ ] 对输出做 L2 归一化
+- [x] 实现 Image Projection Head（Linear / MLP，将图像特征映射到 d 维共享空间）
+- [x] 实现 Text Projection Head（Linear / MLP，将文本特征映射到 d 维共享空间）
+- [x] 对输出做 L2 归一化
 
 ### 2.4 整体模型
-- [ ] 封装为统一的 `CLIPModel` 类
-- [ ] 包含可学习的温度参数 `logit_scale`
+- [x] 封装为统一的 `CLIPModel` 类
+- [x] 包含可学习的温度参数 `logit_scale`
 
 ---
 
 ## Phase 3: 训练 🔲
 
 ### 3.1 损失函数
-- [ ] 实现对称的 InfoNCE / NT-Xent 对比损失
+- [x] 实现对称的 InfoNCE / NT-Xent 对比损失
   - `loss = (loss_img2txt + loss_txt2img) / 2`
 
 ### 3.2 训练脚本
-- [ ] 创建 `train.py` 主训练脚本
+- [x] 创建 `train.py` 主训练脚本
 - [ ] 配置超参数（建议起步值）：
   - batch size: 256
   - learning rate: 3e-4（配合 cosine scheduler）
   - embedding dim: 512
   - epochs: 30+
   - optimizer: AdamW（weight_decay=0.01）
-- [ ] 实现学习率调度器（warmup + cosine decay）
-- [ ] 添加训练日志（loss 曲线、学习率变化）
-- [ ] 支持 checkpoint 保存与恢复
-- [ ] 支持多 GPU 训练（DataParallel / DDP，可选）
+- [x] 实现学习率调度器（warmup + cosine decay）
+- [x] 添加训练日志（loss 曲线、学习率变化）
+- [x] 支持 checkpoint 保存与恢复
+- [x] 支持多 GPU 训练（DataParallel / DDP，可选）
 
 ### 3.3 训练策略（推荐）
 
@@ -88,7 +113,7 @@
 评估节奏：每 N epoch 用 CIFAR-10 快速 sanity check → 最终用 ImageNet 出结果
 ```
 
-- [ ] 阶段 1：仅 COCO 训练，验证流程
+- [x] 阶段 1：仅 COCO 训练，验证流程
 - [ ] 阶段 2：COCO + CC3M 混合训练（~350 万对），正式出结果
 
 ---
@@ -121,9 +146,9 @@
 - [ ] 分析不同 embedding 维度 / projection 层结构对性能的影响
 
 ### 5.3 结果整理
-- [ ] 制作结果表格（accuracy 对比）
+- [x] 制作结果表格（accuracy 对比）
 - [ ] 绘制 loss 曲线图
-- [ ] 准备项目报告 / 演示用的图表
+- [x] 准备项目报告 / 演示用的图表
 
 ---
 

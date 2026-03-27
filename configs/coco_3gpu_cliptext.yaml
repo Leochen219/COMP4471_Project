@@ -1,0 +1,34 @@
+# configs/coco_3gpu_cliptext.yaml
+
+data:
+  train_json: "data/coco/annotations/captions_train2017.json"
+  train_img:  "data/coco/train2017"
+  val_json:   "data/coco/annotations/captions_val2017.json"
+  val_img:    "data/coco/val2017"
+  image_size: 224
+  num_workers: 12
+
+model:
+  image_encoder_name: "vit_base_patch16_224"
+  pretrained: true
+  text_encoder_name: "openai/clip-vit-base-patch32"
+  embed_dim: 256
+  text_max_length: 77
+  freeze_text_encoder: true
+  freeze_text_projection: false
+
+training:
+  epochs: 30
+  batch_size: 96
+  lr: 3.0e-4
+  image_encoder_lr: 1.0e-5
+  weight_decay: 0.01
+  warmup_steps: 1000
+  max_grad_norm: 1.0
+  device: "cuda:1"
+  gpu_ids: [1, 2, 3]
+
+logging:
+  log_interval: 20
+  save_dir: "checkpoints/coco_3gpu_cliptext"
+  resume: ""

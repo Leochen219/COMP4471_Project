@@ -1,5 +1,7 @@
 # 忽略所有数据集文件夹
 coco/
+data/coco/
+data/demo/
 
 # 忽略压缩包（防止误传 zip）
 *.zip
@@ -10,6 +12,13 @@ coco/
 *.pth
 *.pt
 *.onnx
+checkpoints/
+logs/
+datasets/
+
+# 忽略 Python 缓存
+__pycache__/
+*.pyc
 
 # 忽略系统文件
 .DS_Store
