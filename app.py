@@ -11,7 +11,7 @@ from data.transforms import get_val_transform
 # ==========================================
 # 1. 全局初始化：加载配置和模型 (只在启动时加载一次)
 # ==========================================
-print("正在初始化 Web 界面和加载模型...")
+print("Loading model and resources... This may take a moment.")
 cfg = load_config("configs/demo.yaml")
 device = torch.device(cfg.device if torch.cuda.is_available() else "cpu")
 checkpoint_path = "checkpoints/demo_cliptext/best.pt"  # 确保你已经运行过训练并生成了这个文件
@@ -31,9 +31,9 @@ def match_image_texts(image, text_input):
     接收用户上传的图片 (PIL 对象) 和 多行文本，返回每个文本的契合度得分。
     """
     if image is None:
-        return {"请先上传一张图片!": 0.0}
+        return {"At least one image is required": 0.0}
     if not text_input.strip():
-        return {"请输入至少一句候选文案!": 0.0}
+        return {"At least one candidate text is required": 0.0}
 
     # 将输入的字符串按行分割成列表，并去除空行
     candidate_texts = [t.strip() for t in text_input.split('\n') if t.strip()]
@@ -59,27 +59,27 @@ def match_image_texts(image, text_input):
 # ==========================================
 # 3. 构建网页 UI (Gradio Blocks)
 # ==========================================
-with gr.Blocks(title="图文契合度测试引擎") as demo:
-    gr.Markdown("# 🖼️ 朋友圈文案契合度测试 (Zero-Shot Vision-Language Alignment)")
-    gr.Markdown("上传一张你的照片，然后输入几句你想发的文案（每行一句）。模型会自动帮你测算哪句文案和照片的意境最匹配！")
+with gr.Blocks(title="Picture Text Matcher") as demo:
+    gr.Markdown("# 🖼️ Zero-Shot Vision-Language Alignment")
+    gr.Markdown("Upload a photo of yours, then input a few captions you want to post (one per line). The model will automatically calculate which caption best matches the essence of your photo!")
     
     with gr.Row():
         with gr.Column():
             # 左侧：输入区
-            img_input = gr.Image(type="pil", label="📸 上传照片")
+            img_input = gr.Image(type="pil", label="📸 Upload Image")
             # 预设一些有趣的默认文案供测试
             default_texts = "A magnificent view of the Colosseum in Rome\nEnjoying a cozy hot chocolate community event\nA sleek computer science workstation with dual monitors\nA delicious plate of Sichuan-style cuisine\nA photo of a cute dog resting"
             txt_input = gr.Textbox(
                 lines=6, 
-                label="✍️ 候选文案 (每行一句)", 
-                placeholder="在此输入多行文案...",
+                label="✍️ Candidate Texts (one per line)", 
+                placeholder="Enter multiple captions here...",
                 value=default_texts
             )
-            submit_btn = gr.Button("🚀 计算契合度", variant="primary")
+            submit_btn = gr.Button("🚀 Calculate Fit Scores", variant="primary")
             
         with gr.Column():
             # 右侧：输出区
-            output_label = gr.Label(label="✨ 最佳匹配文案榜单")
+            output_label = gr.Label(label="✨ Best Matching Captions with Fit Scores", num_top_classes=5)
 
     # 绑定按钮点击事件到推理函数
     submit_btn.click(
