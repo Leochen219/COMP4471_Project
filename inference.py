@@ -31,8 +31,22 @@ def load_model(cfg, checkpoint_path, device):
     ).to(device)
 
     ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
+    
+    # ====== 新增：兼容队友权重名称差异的代码 ======
+    state_dict = ckpt["model"]
+    new_state_dict = {}
+    for k, v in state_dict.items():
+        # 如果字典里有多余的 'text_model.' 前缀，我们把它去掉，以匹配你本地的代码
+        if "text_encoder.model.text_model." in k:
+            new_k = k.replace("text_encoder.model.text_model.", "text_encoder.model.")
+            new_state_dict[new_k] = v
+        else:
+            new_state_dict[k] = v
+    # ==============================================
+
     try:
-        model.load_state_dict(ckpt["model"])
+        # 注意这里改成了加载 new_state_dict
+        model.load_state_dict(new_state_dict)
     except RuntimeError as exc:
         raise RuntimeError(
             "checkpoint 与当前 CLIP 文本编码器模型不兼容。"

@@ -12,9 +12,11 @@ from data.transforms import get_val_transform
 # 1. 全局初始化：加载配置和模型 (只在启动时加载一次)
 # ==========================================
 print("Loading model and resources... This may take a moment.")
-cfg = load_config("configs/demo.yaml")
+# 👇 第一处修改：读取正式训练的配置文件
+cfg = load_config("configs/coco_3gpu_cliptext.yaml") 
 device = torch.device(cfg.device if torch.cuda.is_available() else "cpu")
-checkpoint_path = "checkpoints/demo_cliptext/best.pt"  # 确保你已经运行过训练并生成了这个文件
+# 👇 第二处修改：读取正式文件夹里的模型
+checkpoint_path = "checkpoints/demo_cliptext/best.pt"
 
 # 加载模型、转换器和分词器
 model = load_model(cfg, checkpoint_path, device)
@@ -22,6 +24,7 @@ transform = get_val_transform(cfg.image_size)
 tokenizer = CLIPTokenizer.from_pretrained(
     getattr(cfg, "text_encoder_name", "openai/clip-vit-base-patch32")
 )
+
 
 # ==========================================
 # 2. 核心推理函数 (适配 Gradio 的输入输出)
