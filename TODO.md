@@ -2,13 +2,15 @@
 
 > 项目目标：训练 ViT 图像编码器，通过对比学习与冻结的文本编码器对齐，实现 Zero-Shot 图像分类。
 
-## 最新进展（2026-03-27）
+## 最新进展（2026-04-27）
 
 - [x] 已切换到冻结的预训练 CLIP text encoder
 - [x] 已完成 COCO `train2017` / `val2017` 正式训练
 - [x] 已完成 3-GPU 正式训练与 best checkpoint 选取
 - [x] 已完成 COCO 严格检索评估
 - [x] 已完成 `CIFAR-100` zero-shot 迁移测试
+- [x] 已完成 `ImageNet val` zero-shot 最终 benchmark
+- [x] 已生成 loss curve、similarity heatmap 和 Top-k 检索可视化
 - [x] 已整理实验报告到 `reports/cliptext_experiment_report.md`
 
 ### 当前最佳结果
@@ -23,6 +25,9 @@
 - CIFAR-100 zero-shot transfer:
   - `Top-1 = 37.21%`
   - `Top-5 = 67.03%`
+- ImageNet zero-shot transfer:
+  - `Top-1 = 19.55%`
+  - `Top-5 = 42.08%`
 
 ---
 
@@ -54,8 +59,9 @@
 | **CIFAR-100** | 100 类 | 10K 张 | 可选 | 中等难度补充评估 |
 | **Caltech-101** | 101 类 | ~3K 张 | 可选 | 轻量级补充评估 |
 
-- [ ] 准备 ImageNet validation set（下载验证集图片 + 1000 类标签映射）
-- [ ] 编写 ImageNet 数据加载器
+- [x] 准备 ImageNet validation set（下载验证集图片 + 1000 类标签映射）
+- [x] 编写 ImageNet zero-shot 评估脚本
+- [x] 运行 ImageNet zero-shot 最终 benchmark
 - [ ] 准备 CIFAR-10（torchvision 可直接下载）
 - [ ] 编写 CIFAR-10 zero-shot 评估脚本（用于训练过程中快速检查）
 - [x] 准备 CIFAR-100（torchvision 可直接下载）
@@ -118,14 +124,14 @@
 
 ---
 
-## Phase 4: Zero-Shot 评估 🔲
+## Phase 4: Zero-Shot 评估 ✅ / 🔲
 
 ### 4.1 ImageNet Zero-Shot 分类
-- [ ] 构建 1000 类的文本 prompt（如 `"a photo of a {class_name}"`）
-- [ ] 对所有类别 prompt 提前编码为文本嵌入并缓存
-- [ ] 对验证集图片编码为图像嵌入
-- [ ] 计算余弦相似度，取 Top-k 类别作为预测
-- [ ] 报告 **Top-1 Accuracy** 和 **Top-5 Accuracy**
+- [x] 构建 1000 类的文本 prompt（如 `"a photo of a {class_name}"`）
+- [x] 对所有类别 prompt 提前编码为文本嵌入
+- [x] 对验证集图片编码为图像嵌入
+- [x] 计算余弦相似度，取 Top-k 类别作为预测
+- [x] 报告 **Top-1 Accuracy** 和 **Top-5 Accuracy**
 
 ### 4.2 Prompt Engineering（可选增强）
 - [ ] 尝试多种 prompt 模板（如 `"a photo of a {class}"`, `"an image of {class}"` 等）
@@ -133,11 +139,11 @@
 
 ---
 
-## Phase 5: 可视化与分析 🔲
+## Phase 5: 可视化与分析 ✅ / 🔲
 
 ### 5.1 定性可视化
-- [ ] **Similarity Heatmap**：展示图像与多个文本类别的相似度矩阵
-- [ ] **Top-k 检索**：给定图片，展示模型预测的前 k 个最可能类别
+- [x] **Similarity Heatmap**：展示图像与多个文本的相似度矩阵
+- [x] **Top-k 检索**：给定图片，展示模型检索出的前 k 个文本结果
 - [ ] **Attention Map**：可视化 ViT 关注的图像区域（可选）
 
 ### 5.2 消融实验 (Ablation Study)
@@ -147,7 +153,7 @@
 
 ### 5.3 结果整理
 - [x] 制作结果表格（accuracy 对比）
-- [ ] 绘制 loss 曲线图
+- [x] 绘制 loss 曲线图
 - [x] 准备项目报告 / 演示用的图表
 
 ---

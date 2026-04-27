@@ -1,0 +1,41 @@
+# configs/coco_4090.yaml
+
+# ============ 数据 ============
+data:
+  train_json: "data/coco/annotations/captions_train2017.json"
+  train_img:  "data/coco/train2017"
+  val_json:   "data/coco/annotations/captions_val2017.json"
+  val_img:    "data/coco/val2017"
+  image_size: 224
+  num_workers: 8
+
+# ============ 模型 ============
+model:
+  image_encoder_name: "vit_base_patch16_224"
+  pretrained: true
+  text_encoder_name: "openai/clip-vit-base-patch32"
+  embed_dim: 256
+  vocab_size: 49408
+  text_max_length: 77
+  text_hidden_dim: 512
+  text_num_layers: 4
+  text_num_heads: 8
+  freeze_text_encoder: true
+  freeze_text_projection: false
+
+# ============ 训练 ============
+training:
+  epochs: 30
+  batch_size: 32
+  lr: 3.0e-4
+  image_encoder_lr: 1.0e-5
+  weight_decay: 0.01
+  warmup_steps: 1000
+  max_grad_norm: 1.0
+  device: "cuda"
+
+# ============ 日志 & 保存 ============
+logging:
+  log_interval: 20
+  save_dir: "checkpoints/coco_4090_cliptext"
+  resume: ""

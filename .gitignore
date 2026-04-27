@@ -2,19 +2,36 @@
 coco/
 data/coco/
 data/demo/
+data/coco_splits/
+datasets/
+imagenet/
 
-# 忽略压缩包（防止误传 zip）
+# 忽略压缩包（防止误传 zip/tar）
 *.zip
+*.tar
 *.tar.gz
+*.tgz
+*.gz
 *.rar
+*.7z
 
 # 忽略大型权重文件（如果你手搓完模型保存了权重）
 *.pth
 *.pt
+*.ckpt
+*.safetensors
+*.bin
 *.onnx
 checkpoints/
 logs/
-datasets/
+
+# 忽略常见大中间文件
+*.npy
+*.npz
+*.pkl
+*.pickle
+*.h5
+*.hdf5
 
 # 忽略 Python 缓存
 __pycache__/

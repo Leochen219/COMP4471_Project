@@ -65,12 +65,13 @@ This protocol is stricter than the standard COCO 5-caption retrieval benchmark, 
 
 ### 3.3 Transfer Evaluation
 
-To test transfer learning ability, the best checkpoint is evaluated zero-shot on `CIFAR-100` classification.
+To test transfer learning ability, the best checkpoint is evaluated zero-shot on `CIFAR-100` and ImageNet classification.
 
 - Dataset split: `CIFAR-100 test`
 - Classes: `100`
 - Prompt template: `a photo of a {class}.`
 - Metric: `Top-1` and `Top-5` classification accuracy
+- Final benchmark: ImageNet validation, `50000` images and `1000` classes
 
 ## 4. Main Results
 
@@ -127,6 +128,20 @@ Interpretation:
 - The model reaches `37.21%` / `67.03%` without supervised fine-tuning on CIFAR-100.
 - This indicates that the image encoder learned from COCO caption alignment retains meaningful semantic transfer ability beyond the training dataset.
 
+### 5.2 ImageNet Zero-Shot Classification
+
+| Metric | Value |
+| --- | ---: |
+| Top-1 accuracy | 19.55 |
+| Top-5 accuracy | 42.08 |
+| Number of validation images | 50000 |
+
+Interpretation:
+
+- Random guess on ImageNet-1K gives about `0.10%` Top-1 and `0.50%` Top-5.
+- The model reaches `19.55%` / `42.08%` without supervised fine-tuning on ImageNet.
+- The ImageNet validation set was organized with the official devkit `meta.mat` mapping from `ILSVRC2012_ID` to WNID.
+
 ## 6. Discussion
 
 ### 6.1 What Worked
@@ -134,13 +149,12 @@ Interpretation:
 - Replacing the old custom text encoder with a pretrained CLIP text encoder produced stable contrastive training.
 - Validation loss improved steadily through most of training and reached the best value at epoch 26.
 - Retrieval results are strong enough to show clear image-text alignment.
-- Transfer performance on CIFAR-100 confirms that the learned representation is not limited to COCO caption matching.
+- Transfer performance on CIFAR-100 and ImageNet confirms that the learned representation is not limited to COCO caption matching.
 
 ### 6.2 Current Limitations
 
 - The retrieval protocol is stricter than the standard COCO evaluation because only one caption per image is kept as positive during testing.
-- The report currently uses a single prompt template for zero-shot transfer evaluation; prompt ensembling may improve CIFAR-100 accuracy further.
-- No standard zero-shot classification benchmark such as ImageNet has been run yet.
+- The report currently uses a single prompt template for zero-shot transfer evaluation; prompt ensembling may improve CIFAR-100 and ImageNet accuracy further.
 
 ## 7. Conclusion
 
@@ -149,6 +163,7 @@ The CLIP text encoder version is a clear improvement over the previous setup con
 - It trains stably on COCO with best validation loss `0.4421`.
 - It reaches about `24.7%` mean top-1 retrieval accuracy under a strict retrieval protocol.
 - It transfers to a different dataset, achieving `37.21%` Top-1 and `67.03%` Top-5 zero-shot accuracy on CIFAR-100.
+- It also reaches `19.55%` Top-1 and `42.08%` Top-5 zero-shot accuracy on ImageNet validation.
 
 Overall, the experiment supports the claim that pretrained text semantics improve cross-modal alignment and provide useful transferability beyond the original training distribution.
 
@@ -161,4 +176,20 @@ Overall, the experiment supports the claim that pretrained text semantics improv
 - Local retrieval evaluation log not committed: `logs/coco_3gpu_cliptext_eval.log`
 - Local run summary not committed: `logs/coco_3gpu_cliptext_summary.txt`
 - Local transfer evaluation output not committed: `logs/cifar100_transfer_eval.txt`
+- Local ImageNet evaluation output not committed: `logs/imagenet_zero_shot.txt`
 - Local best checkpoint not committed: `checkpoints/coco_3gpu_cliptext/best.pt`
+
+## 9. Follow-up Artifacts Generated on 2026-04-27
+
+The following analysis artifacts were generated from the completed COCO run:
+
+- Loss curve: `reports/figures/coco_3gpu_cliptext_loss_curve.png`
+- Similarity heatmap: `reports/figures/coco_similarity_heatmap.png`
+- Top-k retrieval examples: `reports/figures/coco_topk_retrieval_examples.png`
+- ImageNet zero-shot evaluator: `evaluate_imagenet.py`
+- ImageNet download helper: `scripts/download_imagenet_val.py`
+- ImageNet validation preparation helper: `scripts/prepare_imagenet_val.py`
+- Chinese ImageNet report: `reports/imagenet_zero_shot_report_zh.md`
+
+The ImageNet validation benchmark is now complete. The effective result is
+recorded in `logs/imagenet_zero_shot.txt`: `19.55%` Top-1 and `42.08%` Top-5.
