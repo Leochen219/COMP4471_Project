@@ -1,58 +1,237 @@
-# Proposal: Zero-Shot Visual-language feature alignment via ViT-based Contrastive LearningProblem 
+![Demo](reports/figures/demo.png)
 
-DONG, Yunao ydongbd@connect.ust.hk
+# Zero-Shot Vision-Language Feature Alignment via Contrastive Learning
 
-LIU, Xiyue xliufp@connect.ust.hk
+**DONG, Yunao** — ydongbd@connect.ust.hk
 
-CHEN, Hongyu hchendu@connect.ust.hk
+**LIU, Xiyue** — xliufp@connect.ust.hk
 
+**CHEN, Hongyu** — hchendu@connect.ust.hk
 
-## Investigation & Interest:
-Standard classifiers suffer from rigid, pre-set labels. We mitigate this by employing a pre-trained text encoder to match label semantics with image features, enhancing both transferability and generalization. Unlike traditional closed-set classifiers, our model will recognize unseen categories by measuring the similarity between image embeddings and text-derived category prompts. 
-This is highly interesting because it shifts computer vision from "learning to label" to "learning to understand concepts," enabling a model trained on general image-caption pairs to generalize to specialized tasks like ImageNet classification without any category-specific training. 
-## Data:  
-MicrosoftCOCO, ImageNet, etc. 
-### Example:
-图片名: 000000397133.jpg (ID: 397133)
-对应的 5 条描述是:
-  1. A man is in a kitchen making pizzas.
-  2. Man in apron standing on front of oven with pans and bakeware
-  3. A baker is working in the kitchen rolling dough.
-  4. A person standing by a stove in a kitchen.
-  5. A table with pies being made and a person standing near a wall with pots and pans hanging on the wall.
+---
 
-图片名: 000000037777.jpg (ID: 37777)
-对应的 5 条描述是:
-  1. The dining table near the kitchen has a bowl of fruit on it.
-  2. A small kitchen has various appliances and a table.
-  3. The kitchen is clean and ready for us to see.
-  4. A kitchen and dining area decorated in white.
-  5. A kitchen that has a bowl of fruit on the table.
+## Overview
 
-图片名: 000000252219.jpg (ID: 252219)
-对应的 5 条描述是:
-  1. a person with a shopping cart on a city street
-  2. City dwellers walk by as a homeless man begs for cash.
-  3. People walking past a homeless man begging on a city street
-  4. a homeless man holding a cup and standing next to a shopping cart on a street
-  5. People are walking on the street by a homeless person.
+This project implements a **CLIP-style dual-encoder model** that aligns images and text in a shared embedding space via contrastive learning. The model is trained on the **COCO Captions** dataset and can perform **zero-shot image-text retrieval** and **zero-shot classification** on unseen datasets like ImageNet and CIFAR-100.
 
-## Methodology:
-Our methodology focuses on a dual-encoder architecture. We will use a Vision Transformer (ViT) as the image encoder and a pre-trained text-encoder. Critically, we will freeze the text encoder to preserve its linguistic knowledge while actively training the ViT image encoder and a learnable linear projection layer that maps both modalities into a shared d-dimensional latent space. 
-## Evaluation:
-We will evaluate the results both qualitatively and quantitatively. Qualitatively, we will visualize "similarity heatmaps" and retrieve the Top-k most likely classes for sample images to inspect if the model captures correct semantic attributes. Quantitatively, we will report Zero-shot Top-1 and Top-k Accuracy on the ImageNet validation set. We will also perform an ablation study comparing our trained ViT's performance against a standard supervised image classification model in similar scale to demonstrate the advantages of the open-vocabulary approach.
+### Key Features
 
-## environment: 
+- **Dual-encoder architecture**: ViT-B/16 image encoder + frozen CLIP text encoder
+- **Contrastive learning**: Symmetric InfoNCE loss with learnable temperature
+- **Zero-shot transfer**: Classify images from unseen categories using natural language prompts
+- **Interactive demo**: Gradio web interface for real-time image-text matching
+
+---
+
+## Model Architecture
+
+```
+Image ──► ViT-B/16 ──► Image Projection ──► Image Embedding [B, 256] ────┐
+                                                                          │
+                                                                   InfoNCE Loss
+                                                                          │
+Text  ──► CLIP Text Encoder ──► Text Projection ──► Text Embedding [B, 256] ─┘
+          (frozen)
+```
+
+| Component | Specification | Params | Trainable |
+|-----------|--------------|--------|-----------|
+| Image encoder | ViT-B/16 (torchvision, ImageNet-pretrained) | ~86M | Yes (lr=1e-5) |
+| Text encoder | `openai/clip-vit-base-patch32` (HuggingFace) | ~63M | Frozen |
+| Image projection | Linear(768→256) → GELU → Linear(256→256) | ~0.26M | Yes (lr=3e-4) |
+| Text projection | Linear(512→256) → GELU → Linear(256→256) | ~0.20M | Yes (lr=3e-4) |
+| Logit scale | 1 scalar | 1 | Yes |
+| **Total** | | **~149M** | |
+| **Trainable** | | **~86.5M** | |
+
+---
+
+## Main Results
+
+### COCO Retrieval (Strict One-Caption Protocol)
+
+| Metric | Value |
+|--------|:-----:|
+| Image→Text R@1 | 24.88 |
+| Image→Text R@5 | 54.22 |
+| Image→Text R@10 | 68.00 |
+| Text→Image R@1 | 24.58 |
+| Text→Image R@5 | 54.28 |
+| Text→Image R@10 | 68.18 |
+| Mean Recall | 49.02 |
+
+### Zero-Shot Transfer
+
+| Dataset | Top-1 Accuracy | Top-5 Accuracy |
+|---------|:--------------:|:--------------:|
+| CIFAR-100 | 37.21% | 67.03% |
+| ImageNet-1K | 19.55% | 42.08% |
+
+### Baseline Comparison (ResNet-50)
+
+A ResNet-50 baseline is also provided for ablation. See the [baseline report](reports/baseline_resnet50_report.md) for details.
+
+| Metric | ResNet-50 (Baseline) | ViT-B/16 (Main) |
+|--------|:-------------------:|:----------------:|
+| Mean Recall | 30.67 | 49.02 |
+| Image→Text R@1 | 11.84 | 24.88 |
+
+---
+
+## Quick Start: Interactive Demo
+
+### Step 1: Download the pretrained model
+
+Download the best checkpoint from HuggingFace:
+
+```bash
+# Install huggingface-cli if needed
+pip install huggingface-hub
+
+# Download the model checkpoint
+huggingface-cli download Chris-Hornet-Dong/comp4471-cliptext --local-dir ./checkpoints/coco_3gpu_cliptext
+```
+
+Or download manually from: https://huggingface.co/Chris-Hornet-Dong/comp4471-cliptext/tree/main
+
+Place the downloaded `best.pt` into `checkpoints/coco_3gpu_cliptext/`.
+
+### Step 2: Install dependencies
 
 ```bash
 pip install -r requirements.txt
+```
 
-## How to use: 
+### Step 3: Run the Gradio app
 
-demo: 
+```bash
+python app.py
+```
 
-1. run: python make_demo_data.py (this will generate demo data)
-2. run: python train.py --config configs/demo.yaml (trained model will be stored at checkpoints\demo)
-3. run: python evaluate.py --config configs/demo.yaml --checkpoint checkpoints/demo/best.pt (for evaluation)
+This will launch a web interface at `http://localhost:7860` where you can:
 
-COCO: need to be downloaded first to data/coco, where the annotations should be in data/coco/annotations; images should be in data/coco/train2017 and data/coco/val2017
+1. Upload an image
+2. Enter multiple candidate text descriptions (one per line)
+3. Click **"Calculate Fit Scores"** to see which caption best matches your image
+
+---
+
+## Training from Scratch
+
+### Demo (Quick Test)
+
+```bash
+# 1. Generate demo data
+python make_demo_data.py
+
+# 2. Train on demo data
+python train.py --config configs/demo.yaml
+
+# 3. Evaluate
+python evaluate.py --config configs/demo.yaml --checkpoint checkpoints/demo/best.pt
+```
+
+### Full COCO Training
+
+1. Download COCO 2017 dataset to `data/coco/`:
+   - Annotations: `data/coco/annotations/captions_train2017.json`, `captions_val2017.json`
+   - Images: `data/coco/train2017/`, `data/coco/val2017/`
+
+2. Train the model:
+   ```bash
+   python train.py --config configs/coco_3gpu_cliptext.yaml
+   ```
+
+3. Evaluate on COCO retrieval:
+   ```bash
+   python evaluate.py --config configs/coco_3gpu_cliptext.yaml --checkpoint checkpoints/coco_3gpu_cliptext/best.pt
+   ```
+
+4. Zero-shot evaluation on ImageNet:
+   ```bash
+   python evaluate_imagenet.py \
+     --config configs/coco_3gpu_cliptext.yaml \
+     --checkpoint checkpoints/coco_3gpu_cliptext/best.pt \
+     --imagenet-root /path/to/imagenet/val \
+     --class-index-json /path/to/imagenet_class_index.json
+   ```
+
+### Baseline (ResNet-50) Training
+
+```bash
+# Train
+python baseline/train.py --config baseline/config.yaml
+
+# Evaluate
+python baseline/evaluate.py --config baseline/config.yaml --checkpoint checkpoints/baseline_resnet50/best.pt
+```
+
+---
+
+## Project Structure
+
+```
+├── app.py                          # Gradio interactive demo
+├── inference.py                    # Inference utilities
+├── train.py                        # Main training script
+├── evaluate.py                     # COCO retrieval evaluation
+├── evaluate_imagenet.py            # ImageNet zero-shot evaluation
+├── evaluate_transfer.py            # CIFAR-10/100 zero-shot evaluation
+├── make_demo_data.py               # Demo data generator
+├── configs/                        # Training configurations
+│   ├── default.yaml
+│   ├── demo.yaml
+│   ├── coco_3gpu_cliptext.yaml     # Main model config
+│   └── ...
+├── models/                         # Model definitions
+│   ├── clip_model.py               # Main CLIP model (ViT-B/16)
+│   ├── image_encoder.py            # Image encoder builder
+│   └── text_encoder.py             # Text encoder wrapper
+├── data/                           # Dataset and transforms
+│   ├── dataset.py
+│   ├── build.py
+│   └── transforms.py
+├── utils/                          # Loss functions and metrics
+│   ├── losses.py
+│   └── metrics.py
+├── baseline/                       # ResNet-50 baseline
+│   ├── dual_encoder_model.py
+│   ├── train.py
+│   ├── evaluate.py
+│   ├── config.yaml
+│   └── ...
+├── reports/                        # Reports and figures
+│   ├── cliptext_experiment_report.md
+│   ├── baseline_resnet50_report.md
+│   └── figures/
+│       ├── demo.png
+│       ├── coco_3gpu_cliptext_loss_curve.png
+│       ├── coco_similarity_heatmap.png
+│       └── coco_topk_retrieval_examples.png
+└── scripts/                        # Utility scripts
+    ├── plot_loss_curve.py
+    ├── visualize_retrieval.py
+    └── ...
+```
+
+---
+
+## Environment
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Citation
+
+```bibtex
+@misc{comp4471-cliptext,
+  author = {Dong, Yunao and Liu, Xiyue and Chen, Hongyu},
+  title = {Zero-Shot Vision-Language Feature Alignment via Contrastive Learning},
+  year = {2026},
+  howpublished = {GitHub repository},
+  url = {https://github.com/Leochen219/COMP4471_Project}
+}
+```

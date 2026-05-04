@@ -12,11 +12,11 @@ from data.transforms import get_val_transform
 # 1. 全局初始化：加载配置和模型 (只在启动时加载一次)
 # ==========================================
 print("Loading model and resources... This may take a moment.")
-# 👇 第一处修改：读取正式训练的配置文件
-cfg = load_config("configs/coco_3gpu_cliptext.yaml") 
+# Load the pretrained model config and checkpoint
+cfg = load_config("configs/coco_3gpu_cliptext.yaml")
 device = torch.device(cfg.device if torch.cuda.is_available() else "cpu")
-# 👇 第二处修改：读取正式文件夹里的模型
-checkpoint_path = "checkpoints/demo_cliptext/best.pt"
+# Download from HuggingFace: https://huggingface.co/Chris-Hornet-Dong/comp4471-cliptext/tree/main
+checkpoint_path = "checkpoints/coco_3gpu_cliptext/best.pt"
 
 # 加载模型、转换器和分词器
 model = load_model(cfg, checkpoint_path, device)

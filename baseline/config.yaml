@@ -1,0 +1,50 @@
+# baseline/config.yaml
+#
+# Training configuration for ResNet-50 baseline model.
+# ResNet-50 is ImageNet-pretrained, fine-tuned on COCO Captions.
+# Trains on up to 10,000 random image-caption pairs from COCO train2017.
+
+# ============ Data ============
+data:
+  train_json: "data/coco/annotations/captions_train2017.json"
+  train_img:  "data/coco/train2017"
+  val_json:   "data/coco/annotations/captions_val2017.json"
+  val_img:    "data/coco/val2017"
+  image_size: 224
+  num_workers: 0
+  prefetch_factor: 2               # Prefetch batches to avoid Windows DataLoader stalls
+  max_train_samples: 5000          # Randomly sample 5K images from train set
+
+# ============ Model ============
+model:
+  image_encoder_name: "resnet50"            # ResNet-50 (ImageNet pretrained)
+  pretrained: true
+  text_encoder_name: "openai/clip-vit-base-patch32"
+  embed_dim: 256
+  vocab_size: 49408
+  text_max_length: 77
+  text_hidden_dim: 512
+  text_num_layers: 4
+  text_num_heads: 8
+
+  # Freeze strategy (same as main model)
+  freeze_text_encoder: true
+  freeze_text_projection: false
+
+# ============ Training ============
+training:
+  epochs: 30
+  batch_size: 64
+  lr: 3.0e-4                     # Projection heads + logit_scale LR
+  image_encoder_lr: 1.0e-5       # ResNet-50 fine-tune LR
+  weight_decay: 0.01
+  warmup_steps: 40                 # ~1 epoch warmup (40 steps/epoch with batch_size=128)
+  max_grad_norm: 1.0
+  device: "cuda"
+  val_interval: 5                 # Validate every N epochs
+
+# ============ Logging & Saving ============
+logging:
+  log_interval: 3                 # Log every 3 steps (epoch has ~40 steps)
+  save_dir: "checkpoints/baseline_resnet50"
+  resume: ""
