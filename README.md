@@ -1,4 +1,4 @@
-![Demo](reports/figures/demo.png)
+![Demo](demo.png)
 
 # Zero-Shot Vision-Language Feature Alignment via Contrastive Learning
 
