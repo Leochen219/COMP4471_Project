@@ -1,6 +1,9 @@
 # 忽略所有数据集文件夹
 coco/
 data/coco/
+data/cc3m/
+data/cc3m_wds/
+data/flickr30k_wds/
 data/demo/
 data/coco_splits/
 datasets/
