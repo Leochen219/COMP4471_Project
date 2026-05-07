@@ -1,0 +1,21 @@
+MNIST Evaluation Results (Baseline ResNet-50)
+==================================================
+Checkpoint: checkpoints/baseline_resnet50/best.pt
+
+Zero-shot Classification:
+  Overall Accuracy: 9.96%
+  Correct / Total: 996 / 10000
+  Per-Class Accuracy:
+    Digit 0: 98.27%
+    Digit 1: 0.00%
+    Digit 2: 3.20%
+    Digit 3: 0.00%
+    Digit 4: 0.00%
+    Digit 5: 0.00%
+    Digit 6: 0.00%
+    Digit 7: 0.00%
+    Digit 8: 0.00%
+    Digit 9: 0.00%
+
+Linear Probe (frozen ResNet-50 features):
+  Best Accuracy: 80.46%

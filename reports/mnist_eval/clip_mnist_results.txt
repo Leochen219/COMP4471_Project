@@ -1,0 +1,30 @@
+MNIST Zero-Shot Classification Results (CLIP)
+==================================================
+Checkpoint: checkpoints/demo_cliptext/best.pt
+Overall Accuracy: 13.06%
+Correct / Total: 1306 / 10000
+
+Per-Class Accuracy:
+  Digit 0: 81.02%
+  Digit 1: 29.25%
+  Digit 2: 5.91%
+  Digit 3: 0.00%
+  Digit 4: 0.00%
+  Digit 5: 0.00%
+  Digit 6: 0.00%
+  Digit 7: 4.47%
+  Digit 8: 6.78%
+  Digit 9: 0.69%
+
+Confusion Matrix:
+            0     1     2     3     4     5     6     7     8     9
+  0:   794      0     11      0      0      0      0      0    173      2
+  1:    17    332    340      5      0      0      1     23    413      4
+  2:   499      5     61      0      0      0      0      0    460      7
+  3:   687      0     35      0      0      0      0      0    269     19
+  4:   234      9    121     10      0      0      0     12    582     14
+  5:   271      2    126      0      0      0      1      0    442     50
+  6:   582      8     38      2      0      0      0      0    321      7
+  7:   103     22    370      6      0      0     23     46    450      8
+  8:   897      2      8      0      0      0      0      0     66      1
+  9:   879     17     68      1      0      0      0      0     37      7
